@@ -18,3 +18,7 @@ Thumbs.db
 *~
 .idea/
 .vscode/
+
+# gh CLI state (contains an auth token — never commit)
+/.gh-config/
+/.gitconfig-local
