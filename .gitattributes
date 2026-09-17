@@ -1,0 +1,29 @@
+# Line-ending policy.
+#
+# The packaging is Linux-first: a CRLF shebang in dsh-wrapper.sh or the scripts
+# breaks execution, and the RPM build runs them directly. Normalize everything to
+# LF in the repository, and let Git convert on checkout where the platform
+# genuinely needs it.
+* text=auto eol=lf
+
+# cmd.exe parses batch files with labels more reliably with CRLF endings, so
+# check this one out as CRLF on every platform.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Build inputs and outputs that must never be converted or diffed as text.
+*.whl   binary
+*.rpm   binary
+*.srpm  binary
+*.gz    binary
+*.zip   binary
+*.tar   binary
+*.png   binary
+*.jpg   binary
+*.ico   binary
+*.woff2 binary
+
+# Shell scripts and the launchers must stay executable (mode 100755) and LF.
+*.sh       text eol=lf
+*.command  text eol=lf
+*.1        text eol=lf
