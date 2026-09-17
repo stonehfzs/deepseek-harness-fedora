@@ -1,0 +1,117 @@
+name: packaging
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint (spec, scripts, metadata)
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tooling
+        run: dnf install -y --setopt=install_weak_deps=False rpm-build desktop-file-utils appstream curl unzip
+      - name: Lint
+        run: make lint
+
+  rpm:
+    name: RPM + end-to-end smoke test
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tooling
+        run: dnf install -y --setopt=install_weak_deps=False rpm-build unzip desktop-file-utils appstream cpio curl python3 bubblewrap
+      - name: Cache pinned upstream wheel
+        uses: actions/cache@v4
+        with:
+          path: .cache/downloads
+          key: dsh-wheel-${{ hashFiles('scripts/versions.env') }}
+      - name: Build RPM
+        run: make rpm
+      - name: Smoke test (boots dsh web, no root install needed)
+        run: scripts/smoke-test.sh --probe-overlay
+      - name: Show artifact
+        run: ls -lh build/rpmbuild/RPMS/*/*.rpm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deepseek-harness-rpm
+          path: build/rpmbuild/RPMS/*/*.rpm
+          if-no-files-found: error
+
+  portable:
+    name: portable bundle (${{ matrix.target }})
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-x64
+            runs-on: ubuntu-latest
+          - target: linux-arm64
+            runs-on: ubuntu-latest
+          - target: macos-arm64
+            runs-on: macos-14
+          - target: windows-x64
+            runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache pinned upstream wheel
+        uses: actions/cache@v4
+        with:
+          path: .cache/downloads
+          key: dsh-wheel-${{ hashFiles('scripts/versions.env') }}
+      # The Windows runner only needs bash for these scripts (Git Bash is
+      # preinstalled); the bundle build is fetch-and-repack, not a native build.
+      - name: Build bundle
+        shell: bash
+        run: scripts/build-portable.sh ${{ matrix.target }}
+      - name: Verify archive layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -lh dist/
+          for f in dist/*; do
+            case "$f" in
+              *.zip) python3 -m zipfile -l "$f" ;;
+              *)     tar -tzf "$f" ;;
+            esac
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deepseek-harness-${{ matrix.target }}
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+          if-no-files-found: error
+
+  # Rebuilding from the SRPM proves the package is self-contained: the wheel is
+  # embedded in the source RPM, so this job needs no network access to upstream
+  # and no npm/pnpm resolution.
+  srpm-rebuild:
+    name: rebuild from SRPM
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tooling
+        run: dnf install -y --setopt=install_weak_deps=False rpm-build unzip desktop-file-utils appstream cpio curl
+      - name: Cache pinned upstream wheel
+        uses: actions/cache@v4
+        with:
+          path: .cache/downloads
+          key: dsh-wheel-${{ hashFiles('scripts/versions.env') }}
+      - name: Build SRPM, then rebuild the binary RPM from it
+        run: |
+          scripts/build-rpm.sh --srpm
+          scripts/build-rpm.sh --from-srpm
+      - name: Smoke test the rebuilt RPM
+        run: scripts/smoke-test.sh

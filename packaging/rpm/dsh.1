@@ -1,0 +1,141 @@
+.\" Man page for the packaged dsh launcher.
+.TH DSH 1 "September 2026" "deepseek-harness 0.1.5~rc1" "User Commands"
+.SH NAME
+dsh \- boot a DeepSeek Harness profile (agent CLI and browser UI)
+.SH SYNOPSIS
+.B dsh
+.RI [ launcher-options ]
+.RI [ command ]
+.RI [ app-arguments ...]
+.SH DESCRIPTION
+.B dsh
+boots a DeepSeek Harness
+.IR profile :
+an ordered stack of plugin-bundle patch layers with your own overrides applied
+on top. The invoking directory becomes the workspace root.
+.PP
+This package installs the upstream self-contained runtime, so no system Node.js
+is required. The launcher defaults
+.B DSH_HOME
+to
+.I ~/.dsh
+and applies the packaged overlay
+.I /usr/libexec/dsh/patches/00-packaged-workarounds.yml
+when a profile is booted (see PACKAGING below).
+.PP
+The launcher parses only its own options. The first token it does not recognize
+starts the booted profile's own arguments, so app flags belong after the profile
+selection:
+.PP
+.EX
+dsh web --port 8080
+dsh --profile headless "run the tests"
+.EE
+.SH LAUNCHER OPTIONS
+.TP
+.BI \-\-profile " name"
+Boot the profile stored under
+.IR $DSH_HOME/profiles/ name .
+.TP
+.BI \-\-from\-default\-profile " template"
+Create a new profile from a shipped template, then boot it.
+.TP
+.BI \-\-patch " path"
+Apply an extra patch-list overlay after the profile layer. Repeatable.
+.TP
+.B \-\-dump\-config
+Print the composed profile tree and exit.
+.TP
+.B \-\-dump\-default\-config
+Print the profile tree without the user layer or overlays, then exit.
+.TP
+.BR \-V ", " \-\-version
+Print the runtime version and exit.
+.SH COMMANDS
+.TP
+.B web
+Boot the web profile (equivalent to
+.BR "\-\-profile web" )
+and open the browser UI. This is what the desktop entry runs.
+.TP
+.BI plugin " pnpm-arguments"
+Manage a profile's plugin dependencies by forwarding the remaining arguments to
+.B pnpm
+in the profile directory. Requires
+.B pnpm
+to be installed.
+.SH WEB PROFILE OPTIONS
+.TP
+.BI \-\-port " port"
+Listen port; 0 lets the OS pick a free one.
+.TP
+.BI \-\-host " host"
+Bind host.
+.TP
+.B \-\-no\-open
+Do not open the browser.
+.TP
+.BI \-\-trusted\-host " authority"
+Extra authority the browser-trust fence accepts. Repeatable.
+.PP
+The web UI is protected by a browser-trust fence: a bare visit to the listening
+port returns 401, and the tokenized URL printed by
+.B dsh web
+must be used. Plain
+.B dsh web
+opens that URL for you.
+.SH ENVIRONMENT
+.TP
+.B DSH_HOME
+State directory (profiles, sessions, settings, credentials).
+Defaults to
+.IR $HOME/.dsh .
+.TP
+.B XDG_CACHE_HOME
+On first boot the runtime materializes its native addons under
+.IR $XDG_CACHE_HOME/pkg
+(default
+.IR ~/.cache/pkg ).
+This directory must be writable.
+.TP
+.B DSH_LIBEXEC
+Directory holding the packaged runtime (default
+.IR /usr/libexec/dsh ).
+.TP
+.B DSH_PACKAGED_PATCH
+Set to
+.B 0
+to skip the packaged overlay, or to a path to substitute another overlay.
+.SH FILES
+.TP
+.I /usr/libexec/dsh/dsh-runtime
+The self-contained runtime executable.
+.TP
+.I /usr/libexec/dsh/dsh-runtime-rg
+The ripgrep sidecar, resolved by the runtime as
+.IR dsh-runtime-rg .
+.TP
+.I /usr/libexec/dsh/patches/00-packaged-workarounds.yml
+Packaged overlay applied to every profile boot.
+.SH PACKAGING
+Upstream 0.1.5rc1 omits the peer package
+.I @deepseek-ai/dsh-session-title-llm
+from its runtime closure, so every shipped profile fails to boot with
+ERR_MODULE_NOT_FOUND. The packaged overlay disables the single row that imports
+it, falling back to non-LLM session titles. See
+.I /usr/share/doc/deepseek-harness/
+and the packaging notes for details and for how to retire the workaround.
+.SH EXAMPLES
+.TP
+Start the browser UI on a fixed port
+.B dsh web --port 8080
+.TP
+Answer one task and exit
+.B dsh --profile headless "summarize this repository"
+.TP
+Inspect the composed configuration
+.B dsh --profile web --dump-config
+.SH SEE ALSO
+Full upstream documentation:
+.UR https://github.com/deepseek-ai/deepseek-harness
+.UE

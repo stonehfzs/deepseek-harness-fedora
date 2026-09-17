@@ -1,0 +1,20 @@
+# Build outputs
+/build/
+/dist/
+/rpmbuild/
+*.rpm
+*.srpm
+
+# Fetched upstream payloads (large; recreated by `make fetch`)
+/.cache/
+*.whl
+*.tar.gz
+*.zip
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/

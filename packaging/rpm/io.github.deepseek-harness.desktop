@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=DeepSeek Harness
+GenericName=AI Coding Agent
+Comment=Run the DeepSeek Harness agent in your browser
+Exec=dsh web
+Icon=deepseek-harness
+Terminal=false
+Categories=Development;IDE;
+Keywords=AI;agent;LLM;deepseek;harness;coding;assistant;
+StartupNotify=true

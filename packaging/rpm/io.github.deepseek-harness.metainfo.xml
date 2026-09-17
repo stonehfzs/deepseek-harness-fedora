@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AppStream metadata for the deepseek-harness RPM.
+
+  The component id matches the installed desktop file
+  (io.github.deepseek-harness.desktop) and the metainfo file name
+  (io.github.deepseek-harness.metainfo.xml), as AppStream requires.
+-->
+<component type="desktop-application">
+  <id>io.github.deepseek-harness</id>
+
+  <name>DeepSeek Harness</name>
+  <summary>Agentic coding assistant with a browser UI</summary>
+
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+
+  <description>
+    <p>
+      DeepSeek Harness is an agentic coding assistant. It reads and edits files,
+      runs shell commands, searches code, and drives subagents in your working
+      directory, and it serves a browser interface for interactive sessions.
+    </p>
+    <p>
+      This package bundles the upstream self-contained runtime, so it needs no
+      system Node.js and no package-manager install step. Sessions are stored
+      under DSH_HOME (default ~/.dsh).
+    </p>
+  </description>
+
+  <launchable type="desktop-id">io.github.deepseek-harness.desktop</launchable>
+
+  <url type="homepage">https://github.com/deepseek-ai/deepseek-harness</url>
+  <url type="bugtracker">https://github.com/deepseek-ai/deepseek-harness/issues</url>
+
+  <provides>
+    <binary>dsh</binary>
+  </provides>
+
+  <categories>
+    <category>Development</category>
+    <category>IDE</category>
+  </categories>
+
+  <content_rating type="oars-1.1"/>
+</component>

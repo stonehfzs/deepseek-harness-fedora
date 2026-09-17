@@ -1,0 +1,20 @@
+# Packaged workaround overlay for DeepSeek Harness.
+#
+# Upstream 0.1.5rc1 ships a runtime closure that is missing the peer package
+# `@deepseek-ai/dsh-session-title-llm`, while
+# `@deepseek-ai/dsh-session-title-first-prompt-llm` imports it at load time.
+# Every profile composed over `@deepseek-ai/dsh-base` (web, headless, sdk, acp)
+# therefore fails to boot with ERR_MODULE_NOT_FOUND before anything starts.
+#
+# Disabling this one row falls back to the non-LLM `session-title` plugin, which
+# still titles sessions from their first prompt; the rest of the tree is
+# untouched. Note that the package cannot simply be added from npm: the runtime
+# resolves bare specifiers through its embedded virtual filesystem, so an extra
+# directory in $DSH_HOME/profiles/node_modules is never consulted.
+#
+# Remove this file (or set DSH_PACKAGED_PATCH=0) once upstream publishes a
+# runtime whose closure contains the package again. See docs/packaging-notes.md
+# for the reproduction and for how to re-check a new release.
+
+- id: session-title-llm
+  disabled: true
