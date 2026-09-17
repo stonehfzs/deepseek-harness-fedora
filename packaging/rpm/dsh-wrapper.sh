@@ -27,7 +27,7 @@
 
 set -u
 
-self_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+self_dir=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 
 if [ -n "${DSH_LIBEXEC:-}" ]; then
     libexec=$DSH_LIBEXEC

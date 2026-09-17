@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install tooling
-        run: dnf install -y --setopt=install_weak_deps=False rpm-build desktop-file-utils appstream curl unzip
+        run: dnf install -y --setopt=install_weak_deps=False make rpm-build desktop-file-utils appstream curl unzip
       - name: Lint
         run: make lint
 
@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install tooling
-        run: dnf install -y --setopt=install_weak_deps=False rpm-build unzip desktop-file-utils appstream cpio curl python3 bubblewrap
+        run: dnf install -y --setopt=install_weak_deps=False make rpm-build unzip desktop-file-utils appstream cpio curl python3 bubblewrap
       - name: Cache pinned upstream wheel
         uses: actions/cache@v4
         with:
@@ -103,7 +103,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install tooling
-        run: dnf install -y --setopt=install_weak_deps=False rpm-build unzip desktop-file-utils appstream cpio curl
+        run: dnf install -y --setopt=install_weak_deps=False make rpm-build unzip desktop-file-utils appstream cpio curl
       - name: Cache pinned upstream wheel
         uses: actions/cache@v4
         with:

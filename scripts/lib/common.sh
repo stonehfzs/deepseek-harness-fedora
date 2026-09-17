@@ -10,8 +10,8 @@ set -euo pipefail
 
 dsh_repo_root() {
     local here
-    here=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-    (cd -- "$here/../.." && pwd)
+    here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+    (cd "$here/../.." && pwd)
 }
 
 DSH_REPO_ROOT=${DSH_REPO_ROOT:-$(dsh_repo_root)}
@@ -54,18 +54,18 @@ dsh_target_field() {
 # --- portable primitives -----------------------------------------------------
 
 dsh_file_size() {
-    if stat -c %s -- "$1" >/dev/null 2>&1; then
-        stat -c %s -- "$1"
+    if stat -c %s "$1" >/dev/null 2>&1; then
+        stat -c %s "$1"
     else
-        stat -f %z -- "$1"
+        stat -f %z "$1"
     fi
 }
 
 dsh_sha256_file() {
     if command -v sha256sum >/dev/null 2>&1; then
-        sha256sum -- "$1" | cut -d' ' -f1
+        sha256sum "$1" | cut -d' ' -f1
     else
-        shasum -a 256 -- "$1" | cut -d' ' -f1
+        shasum -a 256 "$1" | cut -d' ' -f1
     fi
 }
 
@@ -79,17 +79,17 @@ dsh_fetch_wheel() {
     sha=$(dsh_target_field "$target" sha256)
     url=$(dsh_target_field "$target" url)
 
-    mkdir -p -- "$dest"
+    mkdir -p "$dest"
     file=$dest/$name
 
     if [ -f "$file" ] && [ "$(dsh_sha256_file "$file")" = "$sha" ]; then
         dsh_log "cached  $name"
     else
         dsh_log "fetch   $name"
-        rm -f -- "$file" "$file.part"
+        rm -f "$file" "$file.part"
         curl -fL --retry 3 --retry-delay 2 --connect-timeout 20 \
             --progress-bar -o "$file.part" "$url" || dsh_die "download failed: $url"
-        mv -- "$file.part" "$file"
+        mv "$file.part" "$file"
     fi
 
     got=$(dsh_sha256_file "$file")
@@ -103,11 +103,11 @@ dsh_fetch_wheel() {
 # Flattens deepseek_harness_runtime/runtime/* out of the wheel.
 dsh_extract_payload() {
     local wheel=$1 out=$2
-    rm -rf -- "$out"
-    mkdir -p -- "$out"
+    rm -rf "$out"
+    mkdir -p "$out"
     unzip -q -j "$wheel" 'deepseek_harness_runtime/runtime/*' -d "$out" \
         || dsh_die "could not extract runtime payload from $wheel"
-    [ -n "$(ls -A -- "$out")" ] || dsh_die "no files under deepseek_harness_runtime/runtime/ in $wheel"
+    [ -n "$(ls -A "$out")" ] || dsh_die "no files under deepseek_harness_runtime/runtime/ in $wheel"
 }
 
 # dsh_payload_main <outdir> -> prints the main executable
@@ -116,7 +116,7 @@ dsh_payload_main() {
     local out=$1 f best= bestsize=-1 size
     for f in "$out"/*; do
         [ -f "$f" ] || continue
-        case "$(basename -- "$f")" in
+        case "$(basename "$f")" in
             *-rg|*-rg.exe|*-spawn-helper) continue ;;
         esac
         size=$(dsh_file_size "$f")
@@ -134,7 +134,7 @@ dsh_payload_sidecars() {
     local out=$1 f
     for f in "$out"/*; do
         [ -f "$f" ] || continue
-        case "$(basename -- "$f")" in
+        case "$(basename "$f")" in
             *-rg|*-rg.exe|*-spawn-helper) printf '%s\n' "$f" ;;
         esac
     done
@@ -145,7 +145,7 @@ dsh_payload_rg() {
     local out=$1 f
     for f in "$out"/*; do
         [ -f "$f" ] || continue
-        case "$(basename -- "$f")" in
+        case "$(basename "$f")" in
             *-rg|*-rg.exe) printf '%s\n' "$f"; return 0 ;;
         esac
     done
