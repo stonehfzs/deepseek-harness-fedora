@@ -42,9 +42,14 @@ Being explicit about what has actually been exercised, on this machine
 | `linux-arm64` | Not inspected | Pinned from the PyPI release page | No | No |
 | `macos-arm64` | Verified | Verified (download + hash) | No (wrong OS) | No |
 | `macos-x64` | Not inspected | Pinned from the PyPI release page | No | No |
-| `windows-x64` | Download pending during authoring | Pinned from the PyPI release page | No (wrong OS) | No |
+| `windows-x64` | Verified | Verified (download + hash) | No (wrong OS) | No |
 
-Payload names confirmed by listing the wheel's zip index:
+The two inspected non-Linux wheels were downloaded in full and their SHA256
+matched the pin in `scripts/versions.env`, so the pinned hashes for
+`linux-arm64` and `macos-x64` come from the same PyPI release and the same
+publishing pipeline.
+
+Payload names confirmed by listing the wheels' zip indexes:
 
 ```console
 $ python3 -c "import zipfile,sys; print('\n'.join(n for n in \
@@ -52,7 +57,16 @@ $ python3 -c "import zipfile,sys; print('\n'.join(n for n in \
 deepseek_harness_runtime/runtime/deepseek-harness-sdk-runtime-macos-arm64
 deepseek_harness_runtime/runtime/deepseek-harness-sdk-runtime-macos-arm64-rg
 deepseek_harness_runtime/runtime/deepseek-harness-sdk-runtime-macos-arm64-spawn-helper
+
+$ ... win.whl
+deepseek_harness_runtime/runtime/deepseek-harness-sdk-runtime-win-x64.exe
+deepseek_harness_runtime/runtime/deepseek-harness-sdk-runtime-win-x64-rg.exe
 ```
+
+Note the Windows naming asymmetry: the platform token is `win-x64`, not
+`windows-x64`, and the ripgrep sidecar carries the `.exe` suffix before the `-rg`
+marker (`…-win-x64-rg.exe`), which is why `dsh_payload_sidecars` matches both
+`*-rg` and `*-rg.exe`.
 
 The scripts never hardcode these names: `dsh_extract_payload` flattens the
 runtime directory and classifies files by size and suffix, so an unexpected
